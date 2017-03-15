@@ -15,8 +15,58 @@ public class ConnectFour implements Cloneable{
     private boolean run;
     private boolean isUserOnTheBoard;
     private boolean isCpuMove;
-
+    
     public ConnectFour() {
+        this.board = new char[8][8];
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                board[i][j] = '-';
+            }
+        }
+    }
+
+    //this constructor makes it easier to mock
+    //a ConnectFour object with a specific value,
+    //namely Integer.MAX_VALUE and Integer.MIN_VALUE
+    public ConnectFour(int value){
+        board = null;
+        lastMove = null;
+        this.value = value;
+    }
+
+    //copy constructor
+    public ConnectFour(ConnectFour that){
+        this.board = that.getBoard();
+        this.lastMove = that.getLastMove();
+        this.value = that.getValue();
+    }
+
+    //must deep clone
+    public char[][] getBoard() {
+        char[][] copy = new char[board.length][];
+        for (int r = 0; r < copy.length; r++) {
+            copy[r] = board[r].clone();
+        }
+        return copy;
+    }
+
+    public long getWaitTime() {
+        return waitTime;
+    }
+    
+    public void setWaitTime(long newWaitTime) {
+        waitTime = newWaitTime;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public String getLastMove() {
+        return lastMove;
+    }
+
+    /* public ConnectFour() {
         this.board = new char[8][8];
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
@@ -58,7 +108,7 @@ public class ConnectFour implements Cloneable{
     
     public char[][] getBoard() {
         return board;
-    }
+    } */
 
     public Set<String> getSuccessors(){
         Set<String> successors = new HashSet<>();
@@ -70,7 +120,7 @@ public class ConnectFour implements Cloneable{
                     int col = c+1;
                     String result = row+(col+"");
                     successors.add(result);
-                    this.getBoard()[r][c] = '-';
+//                    this.getBoard()[r][c] = '-';
                 }
 
             }
@@ -147,7 +197,7 @@ public class ConnectFour implements Cloneable{
 
     private String cpuMakeMove(ConnectFour cf) {
         //keep track of latest best move from iterative deepening
-        //ArrayList<String> bestMoves = new ArrayList<>();
+        ArrayList<String> bestMoves = new ArrayList<>();
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -182,7 +232,7 @@ public class ConnectFour implements Cloneable{
     private boolean cpuPlayRound() {
         isCpuMove = true;
         System.out.print("CPU move is: ");
-        ConnectFour cf = (ConnectFour)this.clone();
+        ConnectFour cf = (ConnectFour)this;
         String move = cpuMakeMove(cf);
         System.out.println(move);
         int row = (int) move.charAt(0) - 65;
@@ -215,7 +265,7 @@ public class ConnectFour implements Cloneable{
     }
 
     private String aBPruning() {
-        ConnectFour cf = (ConnectFour) this.clone();
+        ConnectFour cf = (ConnectFour) this;
         cf.search(cf, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
         return cf.getLastMove();
     }
@@ -228,12 +278,12 @@ public class ConnectFour implements Cloneable{
 
         for (String move : moves) {
 
-            ConnectFour newState = (ConnectFour) cf.clone();
+            ConnectFour newState = (ConnectFour) cf;
             
             newState.makeMove(move, 'X');
             //System.out.println(newState);
             int score = iterativeDeepeningSearch(newState);
-            newState.makeMove(move, '-');
+//            newState.makeMove(move, '-');
             
             if (score >= Integer.MAX_VALUE) { //winner found
                 lastMove = move;
@@ -278,19 +328,20 @@ public class ConnectFour implements Cloneable{
         
         if (isCpuMove) {
                 for (String move : moves) {
-                        ConnectFour childcf = (ConnectFour)cf.clone();
+                        ConnectFour childcf = (ConnectFour)cf;
                         childcf.makeMove(move, 'X');
                         alpha = Math.max(alpha, search(childcf, depth - 1, alpha, beta));
                         
                         if (beta <= alpha) {
                                 break;
                         }
-                        childcf.makeMove(move, '-');
+//                        childcf.makeMove(move, '-');
                 }
+                isCpuMove=false;
                 return alpha;
         } else {
                 for (String move : moves) {
-                        ConnectFour childcf = (ConnectFour)cf.clone();
+                        ConnectFour childcf = (ConnectFour)cf;
                         childcf.makeMove(move, 'O');
                         
                         beta = Math.min(beta, search(childcf, depth - 1, alpha, beta));
@@ -298,8 +349,9 @@ public class ConnectFour implements Cloneable{
                         if (beta <= alpha) {
                                 break;
                         }
-                        childcf.makeMove(move, '-');
+//                        childcf.makeMove(move, '-');
                 }
+                isCpuMove=true;
                 return beta;
         }
     }
